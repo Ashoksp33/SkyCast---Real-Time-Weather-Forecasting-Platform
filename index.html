@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>SkyCast - Real-Time Weather Forecasting Platform</title>
+    
+    <!-- Meta tags for SEO & Accessibility -->
+    <meta name="description" content="SkyCast provides accurate real-time weather forecasts, hourly predictions, 5-day daily forecasts, air quality index, dynamic light weather backgrounds, and detailed weather metrics worldwide.">
+    <meta name="keywords" content="weather, forecast, air quality, AQI, temperature, rain, meteorology, live weather, skycast">
+    <meta name="author" content="SkyCast Team">
+
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Application Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="weather-bg-default">
+    <!-- Background Dynamic Weather Overlay -->
+    <div id="dynamicBgOverlay" class="dynamic-bg-overlay"></div>
+    <div class="weather-particles" id="weatherParticles"></div>
+
+    <!-- Main Container -->
+    <div class="app-container">
+
+        <!-- TOP CENTER HEADER & SEARCH BAR -->
+        <header class="app-header header-centered">
+            <!-- Brand & Actions Top Row -->
+            <div class="header-top-row">
+                <div class="brand">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-cloud-sun-rain glowing-icon"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1>SkyCast</h1>
+                        <span class="badge">LIVE</span>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <button id="locationBtn" class="btn btn-secondary" title="Use current location" aria-label="Detect location">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                        <span class="btn-text">Location</span>
+                    </button>
+
+                    <button id="themeToggleBtn" class="btn icon-btn" title="Toggle Light/Dark Theme" aria-label="Toggle theme">
+                        <i class="fa-solid fa-sun"></i>
+                    </button>
+
+                    <button id="apiKeyBtn" class="btn icon-btn key-btn" title="Configure OpenWeatherMap API Key" aria-label="API Key settings">
+                        <i class="fa-solid fa-key"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Centered Search Bar -->
+            <div class="search-centered-wrapper">
+                <form id="searchForm" class="search-bar" role="search">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search any city worldwide (e.g. Bangalore, London, Tokyo)..." autocomplete="off" aria-label="Search city name">
+                    <button type="button" id="clearSearchBtn" class="clear-btn" title="Clear input" style="display: none;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <button type="submit" id="searchBtn" class="btn btn-primary" aria-label="Search button">
+                        <span>Search</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <!-- API Key Missing Notification Banner -->
+        <div id="apiKeyBanner" class="api-key-banner" style="display: none;">
+            <div class="banner-content">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>OpenWeatherMap API key required to fetch live weather data.</span>
+            </div>
+            <button id="bannerSetKeyBtn" class="btn btn-sm btn-accent">Set API Key</button>
+        </div>
+
+        <!-- System Alert / Toast Message -->
+        <div id="alertContainer" class="alert-container" style="display: none;" role="alert">
+            <div class="alert-content">
+                <i id="alertIcon" class="fa-solid fa-circle-exclamation"></i>
+                <span id="alertMessage">An error occurred while fetching weather details.</span>
+            </div>
+            <button id="alertCloseBtn" class="alert-close">&times;</button>
+        </div>
+
+        <!-- Skeleton Loading Screen -->
+        <div id="skeletonLoader" class="skeleton-container" style="display: none;">
+            <div class="skeleton-grid">
+                <div class="skeleton-card glass-card"></div>
+                <div class="skeleton-card glass-card"></div>
+            </div>
+            <div class="skeleton-hero glass-card"></div>
+        </div>
+
+        <!-- MAIN DASHBOARD CONTENT -->
+        <main id="mainDashboard" class="main-dashboard">
+            
+            <!-- ROW 1: EQUAL SIZED CONTAINERS (LEFT: Current Weather | RIGHT: Air Quality Index) -->
+            <div class="grid-two-equal-columns">
+                
+                <!-- LEFT CONTAINER: Current Weather (Temperature Indicating) -->
+                <section class="section-card glass-card hero-card" id="currentWeatherCard">
+                    <div class="hero-header">
+                        <div class="location-details">
+                            <h2 id="cityName"><i class="fa-solid fa-location-dot"></i> <span class="text-placeholder">Loading city...</span></h2>
+                            <p id="currentDateTime" class="datetime"><i class="fa-regular fa-clock"></i> --, --:--</p>
+                        </div>
+                        <div id="weatherConditionTag" class="weather-tag">
+                            <i class="fa-solid fa-cloud-sun"></i> <span id="conditionCategory">--</span>
+                        </div>
+                    </div>
+
+                    <div class="hero-body">
+                        <div class="temp-primary-group">
+                            <div class="weather-icon-wrapper" id="weatherIconWrapper">
+                                <img id="weatherIcon" src="https://openweathermap.org/img/wn/10d@4x.png" alt="Weather condition icon" class="animated-icon">
+                            </div>
+                            <div class="temp-details">
+                                <div class="temp-main">
+                                    <span id="currentTemp">--</span><span class="unit">°C</span>
+                                </div>
+                                <p class="feels-like">Feels like <strong id="feelsLike">--°C</strong></p>
+                                <p id="weatherDescription" class="weather-desc">Fetching weather forecast...</p>
+                            </div>
+                        </div>
+
+                        <!-- Hero Quick Stats Bar -->
+                        <div class="hero-quick-stats">
+                            <div class="stat-pill">
+                                <i class="fa-solid fa-temperature-arrow-up text-hot"></i>
+                                <div>
+                                    <small>High / Low</small>
+                                    <span id="tempMinMax">--° / --°</span>
+                                </div>
+                            </div>
+                            <div class="stat-pill">
+                                <i class="fa-solid fa-droplet text-blue"></i>
+                                <div>
+                                    <small>Humidity</small>
+                                    <span id="heroHumidity">--%</span>
+                                </div>
+                            </div>
+                            <div class="stat-pill">
+                                <i class="fa-solid fa-wind text-teal"></i>
+                                <div>
+                                    <small>Wind Speed</small>
+                                    <span id="heroWind">-- km/h</span>
+                                </div>
+                            </div>
+                            <div class="stat-pill">
+                                <i class="fa-solid fa-smog text-amber"></i>
+                                <div>
+                                    <small>Air Quality</small>
+                                    <span id="heroAqi">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- RIGHT CONTAINER: Air Quality Index (AQI) -->
+                <section class="section-card glass-card aq-card" id="airQualityCard">
+                    <div class="section-title">
+                        <h3><i class="fa-solid fa-wind"></i> Air Quality Index (AQI)</h3>
+                        <span id="aqiBadge" class="aqi-status-badge badge-good">Good</span>
+                    </div>
+                    
+                    <div class="aqi-overview">
+                        <div class="aqi-score-box">
+                            <span id="aqiIndexNum" class="aqi-num">1</span>
+                            <small>AQI Level (1-5)</small>
+                        </div>
+                        <div class="aqi-description">
+                            <p id="aqiDescText">Air quality is considered satisfactory, and air pollution poses little or no risk.</p>
+                        </div>
+                    </div>
+
+                    <!-- Pollutant Details Grid -->
+                    <div class="pollutants-grid">
+                        <div class="pollutant-item">
+                            <span class="name">PM2.5</span>
+                            <span id="valPm25" class="val">-- µg/m³</span>
+                            <div class="progress-bar"><div id="barPm25" class="fill" style="width: 20%;"></div></div>
+                        </div>
+                        <div class="pollutant-item">
+                            <span class="name">PM10</span>
+                            <span id="valPm10" class="val">-- µg/m³</span>
+                            <div class="progress-bar"><div id="barPm10" class="fill" style="width: 15%;"></div></div>
+                        </div>
+                        <div class="pollutant-item">
+                            <span class="name">CO</span>
+                            <span id="valCo" class="val">-- µg/m³</span>
+                            <div class="progress-bar"><div id="barCo" class="fill" style="width: 10%;"></div></div>
+                        </div>
+                        <div class="pollutant-item">
+                            <span class="name">NO2</span>
+                            <span id="valNo2" class="val">-- µg/m³</span>
+                            <div class="progress-bar"><div id="barNo2" class="fill" style="width: 25%;"></div></div>
+                        </div>
+                        <div class="pollutant-item">
+                            <span class="name">SO2</span>
+                            <span id="valSo2" class="val">-- µg/m³</span>
+                            <div class="progress-bar"><div id="barSo2" class="fill" style="width: 5%;"></div></div>
+                        </div>
+                        <div class="pollutant-item">
+                            <span class="name">O3</span>
+                            <span id="valO3" class="val">-- µg/m³</span>
+                            <div class="progress-bar"><div id="barO3" class="fill" style="width: 30%;"></div></div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- ROW 2: FULL WIDTH HORIZONTAL HOURLY FORECAST CONTAINER -->
+            <section class="section-card glass-card full-width-row" id="hourlyForecastCard">
+                <div class="section-title">
+                    <h3><i class="fa-regular fa-clock"></i> Hourly Forecast (24 Hours)</h3>
+                    <span class="subtitle">3-Hour interval forecast</span>
+                </div>
+                <div class="hourly-scroll-container" id="hourlyForecastContainer">
+                    <!-- Hourly Cards injected dynamically via script.js -->
+                    <div class="scroll-hint">Loading hourly forecast...</div>
+                </div>
+            </section>
+
+            <!-- ROW 3: EQUAL SIZED CONTAINERS (LEFT: 5-Day Forecast | RIGHT: Weather Highlights) -->
+            <div class="grid-two-equal-columns">
+                
+                <!-- LEFT CONTAINER: 5-Day Weather Forecast -->
+                <section class="section-card glass-card" id="dailyForecastCard">
+                    <div class="section-title">
+                        <h3><i class="fa-regular fa-calendar-days"></i> 5-Day Weather Forecast</h3>
+                        <span class="subtitle">Daily temperature & conditions</span>
+                    </div>
+                    <div class="daily-forecast-grid" id="dailyForecastContainer">
+                        <!-- Daily Cards injected dynamically via script.js -->
+                        <div class="loading-text">Loading 5-day forecast...</div>
+                    </div>
+                </section>
+
+                <!-- RIGHT CONTAINER: Weather Highlights -->
+                <section class="section-card glass-card" id="weatherHighlightsCard">
+                    <div class="section-title">
+                        <h3><i class="fa-solid fa-chart-simple"></i> Weather Highlights</h3>
+                        <span class="subtitle">Detailed atmospheric parameters</span>
+                    </div>
+
+                    <div class="highlights-grid">
+                        <!-- Card 1: Humidity -->
+                        <div class="highlight-card">
+                            <div class="card-header">
+                                <span>Humidity</span>
+                                <i class="fa-solid fa-droplet icon-humidity"></i>
+                            </div>
+                            <div class="card-value">
+                                <span id="hlHumidity">--</span><small>%</small>
+                            </div>
+                            <div class="card-footer" id="hlHumidityDesc">
+                                Normal comfort level
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Wind Speed & Direction -->
+                        <div class="highlight-card">
+                            <div class="card-header">
+                                <span>Wind Speed & Direction</span>
+                                <i class="fa-solid fa-compass icon-wind"></i>
+                            </div>
+                            <div class="card-value wind-value">
+                                <div>
+                                    <span id="hlWindSpeed">--</span><small>km/h</small>
+                                </div>
+                                <div class="compass-dial">
+                                    <i id="windCompassNeedle" class="fa-solid fa-location-arrow compass-arrow"></i>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                Direction: <strong id="hlWindDir">--° N</strong>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Pressure -->
+                        <div class="highlight-card">
+                            <div class="card-header">
+                                <span>Pressure</span>
+                                <i class="fa-solid fa-gauge-high icon-pressure"></i>
+                            </div>
+                            <div class="card-value">
+                                <span id="hlPressure">--</span><small>hPa</small>
+                            </div>
+                            <div class="card-footer" id="hlPressureStatus">
+                                Standard atmospheric pressure
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Visibility -->
+                        <div class="highlight-card">
+                            <div class="card-header">
+                                <span>Visibility</span>
+                                <i class="fa-solid fa-eye icon-visibility"></i>
+                            </div>
+                            <div class="card-value">
+                                <span id="hlVisibility">--</span><small>km</small>
+                            </div>
+                            <div class="card-footer" id="hlVisibilityStatus">
+                                Clear visibility
+                            </div>
+                        </div>
+
+                        <!-- Card 5: UV Index -->
+                        <div class="highlight-card">
+                            <div class="card-header">
+                                <span>UV Index (Est.)</span>
+                                <i class="fa-solid fa-sun icon-uv"></i>
+                            </div>
+                            <div class="card-value">
+                                <span id="hlUvIndex">--</span>
+                            </div>
+                            <div class="card-footer" id="hlUvStatus">
+                                Moderate protection recommended
+                            </div>
+                        </div>
+
+                        <!-- Card 6: Cloud Coverage -->
+                        <div class="highlight-card">
+                            <div class="card-header">
+                                <span>Cloud Coverage</span>
+                                <i class="fa-solid fa-cloud icon-clouds"></i>
+                            </div>
+                            <div class="card-value">
+                                <span id="hlClouds">--</span><small>%</small>
+                            </div>
+                            <div class="card-footer" id="hlCloudDesc">
+                                Partly cloudy sky
+                            </div>
+                        </div>
+
+                        <!-- Card 7: Dew Point -->
+                        <div class="highlight-card">
+                            <div class="card-header">
+                                <span>Dew Point</span>
+                                <i class="fa-solid fa-temperature-half icon-dew"></i>
+                            </div>
+                            <div class="card-value">
+                                <span id="hlDewPoint">--</span><small>°C</small>
+                            </div>
+                            <div class="card-footer">
+                                Moisture condensation point
+                            </div>
+                        </div>
+
+                        <!-- Card 8: Sunrise & Sunset Timeline -->
+                        <div class="highlight-card sun-timeline-card">
+                            <div class="card-header">
+                                <span>Sunrise & Sunset</span>
+                                <i class="fa-solid fa-sun-plant-wilt icon-sun"></i>
+                            </div>
+                            <div class="sun-times-row">
+                                <div class="sun-time-item">
+                                    <i class="fa-solid fa-sun-rise text-amber"></i>
+                                    <div>
+                                        <small>Sunrise</small>
+                                        <span id="hlSunrise">--:-- AM</span>
+                                    </div>
+                                </div>
+                                <div class="sun-time-item">
+                                    <i class="fa-solid fa-sun-set text-orange"></i>
+                                    <div>
+                                        <small>Sunset</small>
+                                        <span id="hlSunset">--:-- PM</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sun-progress-track">
+                                <div id="sunProgressBar" class="sun-progress-bar" style="width: 50%;"></div>
+                                <i id="sunProgressIcon" class="fa-solid fa-sun sun-progress-icon"></i>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+            </div>
+
+        </main>
+
+        <!-- Footer Section -->
+        <footer class="app-footer">
+            <p>&copy; 2026 <strong>SkyCast Platform</strong>. Powered by OpenWeatherMap API & Glassmorphism Design.</p>
+        </footer>
+
+    </div>
+
+    <!-- API KEY CONFIGURATION MODAL -->
+    <div id="apiKeyModal" class="modal-overlay" style="display: none;">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-key"></i> OpenWeatherMap API Key</h3>
+                <button id="closeModalBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Enter your free <strong>OpenWeatherMap API Key</strong> to unlock real-time live data across the globe.</p>
+                <div class="form-group">
+                    <label for="apiKeyInput">API Key</label>
+                    <input type="text" id="apiKeyInput" placeholder="e.g. b83c79e2048bffaddd71d73e7c6373f0" autocomplete="off">
+                </div>
+                <div class="modal-info">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Don't have an API key? Get one for free at <a href="https://home.openweathermap.org/users/sign_up" target="_blank" rel="noopener">openweathermap.org</a></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="clearKeyBtn" class="btn btn-danger">Reset Key</button>
+                <button id="saveKeyBtn" class="btn btn-primary">Save & Fetch Weather</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Scripts -->
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

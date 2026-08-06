@@ -1,0 +1,1293 @@
+/* ==========================================================================
+   SKYCAST - REAL-TIME WEATHER FORECASTING PLATFORM
+   Custom Grid Layout: Top Center Search, Equal 50/50 Top & Bottom Rows, Full Width Middle
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. COLOR PALETTE & DESIGN TOKENS (LIGHT THEME DEFAULT)
+   -------------------------------------------------------------------------- */
+:root {
+    /* Brand & Accent Colors */
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --accent-color: #0284c7;
+    --accent-glow: rgba(2, 132, 199, 0.25);
+
+    /* Text Colors - Light Mode Default */
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --text-dim: #64748b;
+    --text-inverse: #ffffff;
+
+    /* Glassmorphism Cards - Light Mode */
+    --glass-bg: rgba(255, 255, 255, 0.82);
+    --glass-bg-hover: rgba(255, 255, 255, 0.94);
+    --glass-border: rgba(255, 255, 255, 0.9);
+    --glass-border-glow: rgba(37, 99, 235, 0.35);
+    --glass-shadow: 0 12px 32px -8px rgba(31, 38, 135, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+
+    /* Input & Interactive Elements */
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --input-border: rgba(148, 163, 184, 0.3);
+    --input-focus: rgba(37, 99, 235, 0.35);
+
+    /* Weather & Metric Colors */
+    --color-sun: #f59e0b;
+    --color-rain: #0284c7;
+    --color-thunder: #7c3aed;
+    --color-snow: #0284c7;
+    --color-aqi-good: #10b981;
+    --color-aqi-fair: #65a30d;
+    --color-aqi-moderate: #d97706;
+    --color-aqi-poor: #ea580c;
+    --color-aqi-verypoor: #dc2626;
+
+    /* Layout & Geometry */
+    --radius-sm: 8px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --radius-full: 9999px;
+    --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark Theme Overrides */
+[data-theme="dark"] {
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --text-inverse: #0f172a;
+
+    --glass-bg: rgba(15, 23, 42, 0.75);
+    --glass-bg-hover: rgba(30, 41, 59, 0.88);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-border-glow: rgba(59, 130, 246, 0.35);
+    --glass-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+
+    --input-bg: rgba(15, 23, 42, 0.6);
+    --input-border: rgba(255, 255, 255, 0.15);
+    --input-focus: rgba(59, 130, 246, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   2. DYNAMIC LIGHT WEATHER BACKGROUNDS & GRADIENTS
+   -------------------------------------------------------------------------- */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-body);
+    color: var(--text-main);
+    min-height: 100vh;
+    background-attachment: fixed;
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    transition: background 0.8s ease, color 0.3s ease;
+    overflow-x: hidden;
+}
+
+body.weather-bg-default,
+body.weather-bg-clear-day {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #f0f9ff 100%);
+}
+
+body.weather-bg-clear-night {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+}
+
+body.weather-bg-clouds {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%);
+}
+
+body.weather-bg-rain {
+    background: linear-gradient(135deg, #e0f2fe 0%, #cbd5e1 50%, #94a3b8 100%);
+}
+
+body.weather-bg-thunderstorm {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 50%, #a5b4fc 100%);
+}
+
+body.weather-bg-snow {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+}
+
+body.weather-bg-mist {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+}
+
+/* Dark Mode Backgrounds */
+[data-theme="dark"] body.weather-bg-default,
+[data-theme="dark"] body.weather-bg-clear-day {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.dynamic-bg-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.4) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(37,99,235,0.06) 0%, transparent 40%);
+}
+
+/* --------------------------------------------------------------------------
+   3. GLASSMORPHISM CARDS SYSTEM
+   -------------------------------------------------------------------------- */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.glass-card:hover {
+    border-color: var(--glass-border-glow);
+    box-shadow: 0 16px 40px -8px rgba(37, 99, 235, 0.15), var(--glass-shadow);
+}
+
+/* --------------------------------------------------------------------------
+   4. TOP CENTER HEADER & SEARCH BAR LAYOUT
+   -------------------------------------------------------------------------- */
+.app-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px 24px 40px;
+    box-sizing: border-box;
+}
+
+.app-header.header-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand .logo-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+    box-shadow: 0 6px 18px var(--accent-glow);
+}
+
+.brand .glowing-icon {
+    animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+.brand-text h1 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+}
+
+.brand-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-text .badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* TOP CENTER SEARCH BAR WRAPPER */
+.search-centered-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 620px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-full);
+    padding: 8px 10px 8px 20px;
+    backdrop-filter: blur(10px);
+    transition: all var(--transition-fast);
+    box-shadow: 0 6px 20px rgba(31, 38, 135, 0.06);
+}
+
+.search-bar:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px var(--input-focus);
+}
+
+.search-bar .search-icon {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    margin-right: 12px;
+}
+
+.search-bar input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-main);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.search-bar input::placeholder {
+    color: var(--text-muted);
+}
+
+.clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 0.9rem;
+}
+
+.clear-btn:hover {
+    color: var(--text-main);
+}
+
+/* Buttons System */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+}
+
+.btn-secondary {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.icon-btn {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+}
+
+.icon-btn:hover {
+    background: var(--glass-bg-hover);
+    color: var(--primary-color);
+    transform: rotate(15deg);
+}
+
+.key-btn:hover {
+    color: var(--color-sun);
+}
+
+/* --------------------------------------------------------------------------
+   5. BANNERS & SYSTEM ALERTS
+   -------------------------------------------------------------------------- */
+.api-key-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: var(--radius-md);
+    padding: 12px 20px;
+    margin-bottom: 24px;
+    color: var(--text-main);
+    backdrop-filter: blur(10px);
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+}
+
+.banner-content i {
+    color: #d97706;
+    font-size: 1.2rem;
+}
+
+.alert-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-md);
+    padding: 12px 20px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.3s ease;
+    color: var(--text-main);
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert-content i {
+    color: #dc2626;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    color: var(--text-main);
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   6. CUSTOM MAIN DASHBOARD LAYOUT
+   - Row 1: Equal 50/50 Columns (Left: Current Weather, Right: Air Quality Index)
+   - Row 2: Full Width Horizontal Row (Hourly Forecast)
+   - Row 3: Equal 50/50 Columns (Left: 5-Day Forecast, Right: Weather Highlights)
+   -------------------------------------------------------------------------- */
+.main-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* EQUAL 50/50 TWO COLUMN GRID FOR ROW 1 AND ROW 3 */
+.grid-two-equal-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+/* SECTION CARDS COMMON STYLES */
+.section-card {
+    padding: 28px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 16px;
+}
+
+.full-width-row {
+    width: 100%;
+}
+
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+}
+
+.section-title h3 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-main);
+}
+
+.section-title h3 i {
+    color: var(--primary-color);
+}
+
+.section-title .subtitle {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   7. ROW 1 - LEFT CONTAINER: CURRENT WEATHER (HERO)
+   -------------------------------------------------------------------------- */
+.hero-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    gap: 12px;
+}
+
+.location-details h2 {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-main);
+}
+
+.location-details h2 i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+.location-details .datetime {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.weather-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-transform: capitalize;
+}
+
+.hero-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.temp-primary-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.weather-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+}
+
+.weather-icon-wrapper img.animated-icon {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    animation: iconPulse 4s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+.temp-main {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: var(--text-main);
+}
+
+.temp-main .unit {
+    font-size: 2rem;
+    font-weight: 500;
+    vertical-align: top;
+    color: var(--primary-color);
+}
+
+.feels-like {
+    margin: 4px 0 2px 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.weather-desc {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: var(--text-main);
+}
+
+.hero-quick-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+}
+
+.stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid var(--glass-border);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+}
+
+[data-theme="dark"] .stat-pill {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.stat-pill i {
+    font-size: 1.3rem;
+}
+
+.stat-pill small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-pill span {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+/* --------------------------------------------------------------------------
+   8. ROW 1 - RIGHT CONTAINER: AIR QUALITY INDEX (AQI)
+   -------------------------------------------------------------------------- */
+.aqi-status-badge {
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge-good { background: rgba(16, 185, 129, 0.15); color: var(--color-aqi-good); border: 1px solid var(--color-aqi-good); }
+.badge-fair { background: rgba(101, 163, 13, 0.15); color: var(--color-aqi-fair); border: 1px solid var(--color-aqi-fair); }
+.badge-moderate { background: rgba(217, 119, 6, 0.15); color: var(--color-aqi-moderate); border: 1px solid var(--color-aqi-moderate); }
+.badge-poor { background: rgba(234, 88, 12, 0.15); color: var(--color-aqi-poor); border: 1px solid var(--color-aqi-poor); }
+.badge-verypoor { background: rgba(220, 38, 38, 0.15); color: var(--color-aqi-verypoor); border: 1px solid var(--color-aqi-verypoor); }
+
+.aqi-overview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    background: rgba(255, 255, 255, 0.55);
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+}
+
+[data-theme="dark"] .aqi-overview {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.aqi-score-box {
+    text-align: center;
+    min-width: 70px;
+}
+
+.aqi-score-box .aqi-num {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--text-main);
+}
+
+.aqi-score-box small {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.aqi-description p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.pollutants-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.pollutant-item {
+    background: rgba(255, 255, 255, 0.55);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+}
+
+[data-theme="dark"] .pollutant-item {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.pollutant-item .name {
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.pollutant-item .val {
+    float: right;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-main);
+}
+
+.progress-bar {
+    height: 5px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: var(--radius-full);
+    margin-top: 6px;
+    overflow: hidden;
+}
+
+.progress-bar .fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    border-radius: var(--radius-full);
+    transition: width 0.6s ease;
+}
+
+/* --------------------------------------------------------------------------
+   9. ROW 2 - FULL WIDTH HORIZONTAL HOURLY FORECAST SCROLL CAROUSEL
+   -------------------------------------------------------------------------- */
+.hourly-scroll-container {
+    display: flex;
+    
+    gap: 16px;
+    overflow-x: auto;
+    padding: 4px 0 12px 0;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.hourly-scroll-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.hourly-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: var(--radius-full);
+}
+
+.hourly-card {
+    flex: 0 0 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 16px 12px;
+    transition: all var(--transition-fast);
+}
+
+[data-theme="dark"] .hourly-card {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.hourly-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-4px);
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+}
+
+.hourly-card .time {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.hourly-card img {
+    width: 48px;
+    height: 48px;
+    margin: 6px 0;
+}
+
+.hourly-card .temp {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.hourly-card .desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
+}
+
+.section-card.glass-card{
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+/* --------------------------------------------------------------------------
+   10. ROW 3 - LEFT CONTAINER: 5-DAY FORECAST
+   -------------------------------------------------------------------------- */
+.daily-forecast-grid {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.daily-card {
+    display: grid;
+    grid-template-columns: 130px 50px 1fr 110px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+    transition: all var(--transition-fast);
+}
+
+[data-theme="dark"] .daily-card {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.daily-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateX(4px);
+    border-color: var(--primary-color);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.1);
+}
+
+.daily-card .day-name {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text-main);
+}
+
+.daily-card .day-date {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.daily-card img {
+    width: 40px;
+    height: 40px;
+}
+
+.daily-card .condition {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    text-transform: capitalize;
+}
+
+.daily-card .temp-range {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+}
+
+.daily-card .max-temp {
+    font-size: 1.05rem;
+    color: var(--text-main);
+}
+
+.daily-card .min-temp {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   11. ROW 3 - RIGHT CONTAINER: WEATHER HIGHLIGHTS (8 METRIC GRID)
+   -------------------------------------------------------------------------- */
+.highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.highlight-card {
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all var(--transition-fast);
+}
+
+[data-theme="dark"] .highlight-card {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.highlight-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.card-header i {
+    font-size: 1.1rem;
+}
+
+.card-value {
+    font-family: var(--font-heading);
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 10px 0 4px 0;
+    color: var(--text-main);
+}
+
+.card-value small {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-left: 4px;
+    color: var(--text-muted);
+}
+
+.card-footer {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* Wind Value & Compass Needle */
+.wind-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.compass-dial {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--glass-border);
+}
+
+.compass-arrow {
+    color: var(--primary-color);
+    font-size: 1.05rem;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sunrise & Sunset Timeline Card (Spans 2 columns) */
+.sun-timeline-card {
+    grid-column: span 2;
+}
+
+.sun-times-row {
+    display: flex;
+    justify-content: space-around;
+    margin: 10px 0;
+}
+
+.sun-time-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sun-time-item i {
+    font-size: 1.4rem;
+}
+
+.sun-time-item small {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.sun-time-item span {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-main);
+}
+
+.sun-progress-track {
+    position: relative;
+    height: 6px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: var(--radius-full);
+    margin-top: 8px;
+}
+
+.sun-progress-bar {
+    height: 100%;
+    background: linear-gradient(to right, #f59e0b, #ef4444);
+    border-radius: var(--radius-full);
+}
+
+.sun-progress-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #f59e0b;
+    font-size: 0.85rem;
+}
+
+/* Color Helpers */
+.text-hot { color: #dc2626; }
+.text-blue { color: #0284c7; }
+.text-teal { color: #0d9488; }
+.text-amber { color: #d97706; }
+.text-orange { color: #ea580c; }
+
+/* --------------------------------------------------------------------------
+   12. SKELETON LOADING ANIMATION
+   -------------------------------------------------------------------------- */
+.skeleton-container .skeleton-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.skeleton-hero {
+    height: 200px;
+    padding: 28px;
+}
+
+.skeleton-card {
+    height: 280px;
+    background: linear-gradient(90deg, rgba(148,163,184,0.1) 25%, rgba(148,163,184,0.25) 50%, rgba(148,163,184,0.1) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* --------------------------------------------------------------------------
+   13. MODAL DIALOG (API KEY CONFIG)
+   -------------------------------------------------------------------------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 28px;
+    box-sizing: border-box;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.modal-header h3 {
+    font-family: var(--font-heading);
+    margin: 0;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-main);
+}
+
+.modal-header h3 i {
+    color: var(--color-sun);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.6rem;
+    cursor: pointer;
+}
+
+.form-group {
+    margin: 16px 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    border-color: var(--primary-color);
+}
+
+.modal-info {
+    display: flex;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.modal-info a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   14. FOOTER & COMPREHENSIVE RESPONSIVE BREAKPOINTS
+   -------------------------------------------------------------------------- */
+.app-footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Medium Desktop & Tablets (<992px) - Stack equal 50/50 grids to 1-column */
+@media (max-width: 991px) {
+    .app-container {
+        padding: 16px 16px 32px;
+    }
+
+    .grid-two-equal-columns {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .hero-quick-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Mobile Devices (480px - 767px) */
+@media (max-width: 767px) {
+    .header-top-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    .header-actions {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .search-bar {
+        max-width: 100%;
+    }
+
+    .section-card {
+        padding: 20px;
+    }
+
+    .temp-main {
+        font-size: 3.4rem;
+    }
+
+    .hero-quick-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .daily-card {
+        grid-template-columns: 1fr 40px 90px;
+        padding: 10px 14px;
+    }
+
+    .daily-card .condition {
+        display: none;
+    }
+
+    .highlights-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .sun-timeline-card {
+        grid-column: span 2;
+    }
+}
+
+/* Small Mobile Phones (<480px) */
+@media (max-width: 479px) {
+    .temp-primary-group {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .temp-main {
+        font-size: 3rem;
+    }
+
+    .hero-quick-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .highlights-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sun-timeline-card {
+        grid-column: span 1;
+    }
+
+    .daily-card {
+        grid-template-columns: 1fr 40px 80px;
+    }
+}
